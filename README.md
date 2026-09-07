@@ -61,3 +61,35 @@ retail-medallion-architecture/
 ├── README.md            # Explicación del proyecto para LinkedIn/GitHub
 └── main.py              # Script principal de ejecución del pipeline
 ```
+
+
+<!-- NOTAS -->
+
+<!-- 
+
+En la **Capa Plata (Silver)** hemos realizado las siguientes tareas clave sobre los datos que teníamos en la Capa Bronce:
+
+1. **Estandarización y renombrado de columnas:**
+* Cambiamos los nombres originales (`id`, `label`, `text`, `label_text`) a nombres más claros y representativos (`review_id`, `rating`, `review_text`, `rating_label`).
+
+
+2. **Tipado de datos (Casteos):**
+* Convertimos la columna `label` (ahora `rating`) a un tipo entero (`integer`) para asegurar que se puedan hacer operaciones matemáticas posteriores.
+
+
+3. **Limpieza y filtrado de calidad:**
+* **Limpieza de texto:** Eliminamos espacios en blanco al inicio y final del texto con la función `trim()`.
+* **Filtro de nulos y vacíos:** Descartamos cualquier registro que no tuviera `review_id` o donde el texto de la reseña estuviera vacío.
+* **Rango válido:** Garantizamos que las puntuaciones estuvieran dentro del rango esperado (entre 0 y 5).
+
+
+4. **Enriquecimiento de datos (Columnas derivadas):**
+* **`text_length`:** Calculamos la longitud en caracteres del cuerpo de cada reseña.
+* **`sentiment_flag`:** Clasificamos cada reseña en *positivo* (rating $\ge$ 4), *neutral* (rating = 3) o *negativo* (rating $\le$ 2).
+* **`silver_processed_timestamp`:** Añadimos la fecha y hora exacta de procesamiento para mantener la trazabilidad del pipeline.
+
+
+5. **Almacenamiento:**
+* Guardamos el resultado final en formato **Delta Lake** dentro de `data/silver/amazon_reviews` en modo *overwrite*.
+
+ -->

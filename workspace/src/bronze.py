@@ -1,21 +1,8 @@
 from datasets import load_dataset
 from pyspark.sql import SparkSession
-from delta import configure_spark_with_delta_pip
+from pyspark.sql.functions import current_timestamp
 import os
-
-
-def create_spark_session() -> SparkSession:
-    """
-    Inicializa Spark con soporte para Delta Lake
-    """
-    return configure_spark_with_delta_pip(
-        SparkSession.builder.appName("EcommerceMedallion - Bronze")
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config(
-            "spark.sql.catalog.spark_catalog",
-            "org.apache.spark.sql.delta.catalog.DeltaCatalog",
-        )
-    ).getOrCreate()
+from config import create_spark_session
 
 
 def ingest_to_bronze(spark: SparkSession, output_path: str):
@@ -36,8 +23,11 @@ def ingest_to_bronze(spark: SparkSession, output_path: str):
     print("Convirtiendo dataset a PySpark DataFrame...")
     df = spark.createDataFrame(dataset.to_pandas())
 
+    # Metadatos de auditoría
+    df_bronze = df.withColumn("ingestion_timestamp", current_timestamp())
+
     print(f"Escribiendo tabla Delta en {output_path}...")
-    df.write.format("delta").mode("overwrite").save(output_path)
+    df_bronze.write.format("delta").mode("overwrite").save(output_path)
     print("\n¡Ingesta en Capa Bronce completada con éxito!")
 
 
