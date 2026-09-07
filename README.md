@@ -125,17 +125,17 @@ docker build -t jupyter-spark:latest .
 ### Data Mart: `sentiment_metrics`
 
 | sentiment_flag | total_reviews | avg_rating | avg_text_length |
-| -------------- | ------------- | ---------- | --------------- |
-| **positivo**   | 124,500       | 4.65       | 142.3           |
-| **neutral**    | 31,200        | 3.00       | 185.7           |
-| **negativo**   | 44,300        | 1.42       | 210.1           |
+| :------------- | :------------ | :--------- | :-------------- |
+| **positivo**   | 480,000       | 3.5        | 150.55          |
+| **neutral**    | 240,000       | 2.0        | 167.10          |
+| **negativo**   | 480,000       | 0.5        | 167.20          |
 
 ### Data Mart: `rating_distribution`
 
 | rating | rating_label | total_reviews | avg_text_length |
-| ------ | ------------ | ------------- | --------------- |
-| 1      | 1 star       | 28,100        | 220.4           |
-| 2      | 2 star       | 16,200        | 199.8           |
-| 3      | 3 star       | 31,200        | 185.7           |
-| 4      | 4 star       | 42,000        | 158.2           |
-| 5      | 5 star       | 82,500        | 126.4           |
+| :----: | :----------- | :------------ | :-------------- |
+|   0    | 0 estrellas  | 240,000       | 158.3           |
+|   1    | 1 estrella   | 240,000       | 176.1           |
+|   2    | 2 estrellas  | 240,000       | 167.1           |
+|   3    | 3 estrellas  | 240,000       | 158.3           |
+|   4    | 4 estrellas  | 240,000       | 142.8           |
