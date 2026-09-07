@@ -11,12 +11,12 @@ def run_pipeline():
     spark = create_spark_session()
 
     bronze_path = os.path.join(
-        os.path.dirname(__file__), "../", "data", "bronze", "amazon_reviews"
+        os.path.dirname(__file__), "data", "bronze", "amazon_reviews"
     )
     silver_path = os.path.join(
-        os.path.dirname(__file__), "../", "data", "silver", "amazon_reviews"
+        os.path.dirname(__file__), "data", "silver", "amazon_reviews"
     )
-    gold_base_path = os.path.join(os.path.dirname(__file__), "../", "data", "gold")
+    gold_base_path = os.path.join(os.path.dirname(__file__), "data", "gold")
 
     print("\n---> Ejecutando Capa Bronce...")
     ingest_to_bronze(spark, bronze_path)

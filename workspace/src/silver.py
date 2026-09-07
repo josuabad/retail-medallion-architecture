@@ -1,7 +1,15 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, trim, when, current_timestamp, length
+from pyspark.sql.functions import (
+    col,
+    trim,
+    when,
+    current_timestamp,
+    length,
+    concat,
+    lit,
+)
 import os
-from config import create_spark_session
+from .config import create_spark_session
 
 
 def transform_to_silver(spark: SparkSession, bronze_path: str, silver_path: str):
@@ -31,10 +39,11 @@ def transform_to_silver(spark: SparkSession, bronze_path: str, silver_path: str)
         df_filtered.withColumn("text_length", length(col("review_text")))
         .withColumn(
             "sentiment_flag",
-            when(col("rating") >= 4, "positivo")
-            .when(col("rating") == 3, "neutral")
+            when(col("rating") >= 3, "positivo")
+            .when(col("rating") == 2, "neutral")
             .otherwise("negativo"),
         )
+        .withColumn("rating_label", concat(col("rating"), lit(" estrellas")))
         .withColumn("silver_processed_timestamp", current_timestamp())
     )
 

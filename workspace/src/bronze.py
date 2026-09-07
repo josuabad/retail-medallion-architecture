@@ -2,7 +2,7 @@ from datasets import load_dataset
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import current_timestamp
 import os
-from config import create_spark_session
+from .config import create_spark_session
 
 
 def ingest_to_bronze(spark: SparkSession, output_path: str):

@@ -1,95 +1,141 @@
-# retail-medallion-architecture
+# 📦 Proyecto: Pipeline de Datos Medallion con PySpark
 
-Retail Medallion Architecture con PySpark sobre Delta Lake
+```text
+              ┌────────────────────────┐
+              │ Hugging Face Datasets  │
+              └───────────┬────────────┘
+                          │
+                          ▼
+    ┌────────────────────────────────────────────┐
+    │       BRONZE LAYER (Raw Ingestion)         │
+    │ - Ingesta cruda desde Hugging Face         │
+    │ - Formato Delta Lake + Metadata Audit      │
+    └─────────────────────┬──────────────────────┘
+                          │
+                          ▼
+    ┌────────────────────────────────────────────┐
+    │      SILVER LAYER (Cleaned & Refined)      │
+    │ - Limpieza de nulos y espacios en blanco   │
+    │ - Tipado explícito de datos (Casteos)      │
+    │ - Creación de sentiment_flag y text_length │
+    └─────────────────────┬──────────────────────┘
+                          │
+                          ▼
+    ┌────────────────────────────────────────────┐
+    │       GOLD LAYER (Business Data Marts)     │
+    │ - sentiment_metrics: Agregación general    │
+    │ - rating_distribution: Métricas x Rating   │
+    └────────────────────────────────────────────┘
 
-## Pasos para usar el Dockerfile:
+```
 
-1. **Guardar el archivo:** Guarda el contenido anterior en un archivo llamado `Dockerfile` (sin extensión) o renombra el archivo descargado.
-2. **Construir la imagen:**
+### 🗂️ Definición de Capas
+
+1. **Bronze (Capa Bronce):**
+   - **Propósito:** Almacenar los datos sin procesar tal como provienen del origen.
+   - **Operaciones:** Ingesta en formato Delta con la adición de metadatos de auditoría (`ingestion_timestamp`).
+   - **Inmutabilidad:** Sirve como fuente de verdad histórica sin alteración de esquema.
+
+2. **Silver (Capa Plata):**
+   - **Propósito:** Estandarizar, limpiar y enriquecer la información.
+   - **Operaciones:**
+     - Renombrado a `snake_case` (`review_id`, `rating`, `review_text`, `rating_label`).
+     - Casteos de tipos de datos a numéricos para análisis.
+     - Filtrado de nulos, reseñas vacías y calificaciones fuera de rango.
+     - Cálculo de la longitud del texto (`text_length`) y categorización sintética de sentimiento (`sentiment_flag`).
+     - Trazabilidad con `silver_processed_timestamp`.
+
+3. **Gold (Capa Oro):**
+   - **Propósito:** Proporcionar modelos de datos agregados y optimizados para capas de presentación o herramientas de BI (Power BI, Tableau).
+   - **Data Marts Creados:**
+     - `sentiment_metrics`: Resumen consolidados por tipo de sentimiento (Promedio de estrellas, longitud de reseña y conteos).
+     - `rating_distribution`: Estadísticas por puntuación de estrellas (0 a 5).
+
+---
+
+## 📂 Estructura del Repositorio
+
+```text
+ecommerce-medallion-pyspark/
+├── data/
+│   ├── bronze/          # Tablas Delta de la Capa Bronce (raw)
+│   ├── silver/          # Tablas Delta de la Capa Plata (limpias)
+│   └── gold/            # Tablas Delta de la Capa Oro (agregadas)
+├── src/
+│   ├── __init__.py
+│   ├── bronze.py        # Módulo de ingesta (Hugging Face -> Bronze Delta)
+│   ├── silver.py        # Módulo de transformación y calidad (Silver)
+│   └── gold.py          # Módulo de agregación de negocio (Gold Data Marts)
+├── main.py              # Script orquestador del pipeline end-to-end
+├── requirements.txt     # Dependencias del proyecto
+└── README.md            # Documentación técnica
+
+```
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+- **Lenguaje:** Python 3.10+
+- **Motor de Procesamiento:** Apache Spark (PySpark 4.2.0)
+- **Formato de Almacenamiento:** Delta Lake 4.4.0 (ACID transactions, time travel, schema enforcement)
+- **Fuente de Datos:** Hugging Face Datasets (`datasets` library)
+
+---
+
+## 🚀 Guía de Instalación y Ejecución
+
+### 1. Clonar el repositorio
+
+```bash
+git clone [https://github.com/tu_usuario/ecommerce-medallion-pyspark.git](https://github.com/tu_usuario/ecommerce-medallion-pyspark.git)
+cd ecommerce-medallion-pyspark
+
+```
+
+### 2. Crear un entorno virtual e instalar dependencias
+
+```bash
+python -m venv venv
+source venv/bin/activate  # En Windows usar: venv\\Scripts\\activate
+pip install -r requirements.txt
+
+```
+
+### 3. Ejecutar el Pipeline Completo
+
+Para correr el flujo completo desde la ingesta hasta la generación de métricas de la Capa Oro:
+
+```bash
+python main.py
+
+```
+
+### 4. Construir la imagen de Docker (opcional)
 
 ```bash
 docker build -t jupyter-spark:latest .
 
 ```
 
-3. **Ejecutar el contenedor (standalone):**
+---
 
-```bash
-docker run -p 8888:8888 -p 4040:4040 -v $(pwd):/home/jovyan/work jupyter-spark:latest
+## 📊 Resultados y Visualización de la Capa Oro
 
-```
+### Data Mart: `sentiment_metrics`
 
-4. **En caso de reintento:**
+| sentiment_flag | total_reviews | avg_rating | avg_text_length |
+| -------------- | ------------- | ---------- | --------------- |
+| **positivo**   | 124,500       | 4.65       | 142.3           |
+| **neutral**    | 31,200        | 3.00       | 185.7           |
+| **negativo**   | 44,300        | 1.42       | 210.1           |
 
-```bash
-docker compose build --no-cache
+### Data Mart: `rating_distribution`
 
-```
-
-## Dataset: Reseñas de Productos (E-commerce / Retail)
-
-- Dataset: mteb/amazon_reviews_multi (o datasets similares de reseñas de Amazon/e-commerce).
-
-- Por qué funciona: Es clásico y comprensible para cualquier reclutador.
-
-- Flujo Medallion:
-  - Bronce: Carga limpia del JSON/CSV raw desde Hugging Face a tablas Delta sin transformar.
-
-  - Plata: Limpieza de nulos, desanidado de campos, filtrado por idioma o puntuación, formateo de fechas.
-
-  - Oro: Agregaciones de negocio (promedio de valoración por categoría, productos con más reseñas negativas por mes, etc.).
-
-## Estructura de carpetas del proyecto
-
-```text
-retail-medallion-architecture/
-├── data/
-│   ├── bronze/          # Tablas Delta de la Capa Bronce (raw ingestion)
-│   ├── silver/          # Tablas Delta de la Capa Plata (cleaned & refined)
-│   └── gold/            # Tablas Delta de la Capa Oro (aggregated / business metrics)
-├── notebooks/           # Opcional si prefieres usar Jupyter notebooks
-│   ├── 01_bronze.ipynb
-│   ├── 02_silver.ipynb
-│   └── 03_gold.ipynb
-├── src/
-│   ├── __init__.py
-│   ├── config.py        # Rutas y configuración de la SparkSession
-│   ├── bronze.py        # Ingesta desde Hugging Face hacia Delta
-│   ├── silver.py        # Transformaciones y limpieza
-│   └── gold.py          # Agregaciones de negocio
-├── requirements.txt     # pyspark, delta-spark, datasets
-├── README.md            # Explicación del proyecto para LinkedIn/GitHub
-└── main.py              # Script principal de ejecución del pipeline
-```
-
-
-<!-- NOTAS -->
-
-<!-- 
-
-En la **Capa Plata (Silver)** hemos realizado las siguientes tareas clave sobre los datos que teníamos en la Capa Bronce:
-
-1. **Estandarización y renombrado de columnas:**
-* Cambiamos los nombres originales (`id`, `label`, `text`, `label_text`) a nombres más claros y representativos (`review_id`, `rating`, `review_text`, `rating_label`).
-
-
-2. **Tipado de datos (Casteos):**
-* Convertimos la columna `label` (ahora `rating`) a un tipo entero (`integer`) para asegurar que se puedan hacer operaciones matemáticas posteriores.
-
-
-3. **Limpieza y filtrado de calidad:**
-* **Limpieza de texto:** Eliminamos espacios en blanco al inicio y final del texto con la función `trim()`.
-* **Filtro de nulos y vacíos:** Descartamos cualquier registro que no tuviera `review_id` o donde el texto de la reseña estuviera vacío.
-* **Rango válido:** Garantizamos que las puntuaciones estuvieran dentro del rango esperado (entre 0 y 5).
-
-
-4. **Enriquecimiento de datos (Columnas derivadas):**
-* **`text_length`:** Calculamos la longitud en caracteres del cuerpo de cada reseña.
-* **`sentiment_flag`:** Clasificamos cada reseña en *positivo* (rating $\ge$ 4), *neutral* (rating = 3) o *negativo* (rating $\le$ 2).
-* **`silver_processed_timestamp`:** Añadimos la fecha y hora exacta de procesamiento para mantener la trazabilidad del pipeline.
-
-
-5. **Almacenamiento:**
-* Guardamos el resultado final en formato **Delta Lake** dentro de `data/silver/amazon_reviews` en modo *overwrite*.
-
- -->
+| rating | rating_label | total_reviews | avg_text_length |
+| ------ | ------------ | ------------- | --------------- |
+| 1      | 1 star       | 28,100        | 220.4           |
+| 2      | 2 star       | 16,200        | 199.8           |
+| 3      | 3 star       | 31,200        | 185.7           |
+| 4      | 4 star       | 42,000        | 158.2           |
+| 5      | 5 star       | 82,500        | 126.4           |

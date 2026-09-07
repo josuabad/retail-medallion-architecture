@@ -7,7 +7,7 @@ from pyspark.sql.functions import (
     current_timestamp,
 )
 import os
-from config import create_spark_session
+from .config import create_spark_session
 
 
 def build_gold_layer(spark: SparkSession, silver_path: str, gold_base_path: str):
